@@ -8,13 +8,12 @@ from botocore.exceptions import NoCredentialsError
 
 app = FastAPI()
 
-# Configure CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
-    allow_headers=["*"],  # Allow all HTTP headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -42,11 +41,9 @@ async def upload_file(image_file: Optional[UploadFile] = File(...),username: str
         if not image_file or image_file.filename == "":
             raise HTTPException(status_code=400, detail="No image file provided")
 
-        # Generate the S3 key (path) where the file will be stored
         s3_key = f"{username}/{image_file.filename}"
-        print(s3_key)  # Ensure that the s3_key is printed for debugging
+        print(s3_key)
 
-        # Upload the file to S3
         s3.upload_fileobj(
             Fileobj=image_file.file,
             Bucket=S3_BUCKET,
@@ -58,9 +55,6 @@ async def upload_file(image_file: Optional[UploadFile] = File(...),username: str
         raise HTTPException(status_code=500, detail="AWS credentials not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-
 
 
 
