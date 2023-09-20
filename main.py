@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, UploadFile, HTTPException, Form, File
 import boto3
 from botocore.exceptions import NoCredentialsError
+import json
 
 app = FastAPI(title="Analyzer",
     description="Image Detection API",
@@ -31,10 +32,11 @@ s3 = boto3.client('s3',
                   aws_access_key_id=AWS_ACCESS_KEY,
                   aws_secret_access_key=AWS_SECRET_KEY,
                   endpoint_url=S3_ACCESS_POINT)
-dynamodb = boto3.client('dynamodb', region_name='us-east-1')
+dynamodb = boto3.client('dynamodb', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY,
+                        region_name='us-east-1')
 
 
-@app.get("/list")
+@app.get("/list/")
 async def read_root():
     try:
         lists = s3.list_buckets()
@@ -74,20 +76,19 @@ async def upload_file(image_file: Optional[UploadFile] = File(...),username: str
 async def get_user_data(username: str = Form(...)):
 
     try:
-        gettabledata = dynamodb.get_item(
-            TableName=Table,
-            Key={"Username": {'S': username}}
-        )
+        gettabledata = dynamodb.get_item(TableName=Table, Key={'Username': {'S': username}})
         if 'Item' not in gettabledata:
             raise HTTPException(status_code=404, detail="User data not found")
 
-        userdata = gettabledata['Item']
-        return userdata
-    except Exception as e:
+        else:
+            userdata = gettabledata['Item']
+            userdata = json.loads(userdata.get('Data', {'S': '[]'})['S'])
+            return {"message": "User data found", "data": userdata}
 
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-if __name__ == "__main__":
-     import uvicorn
-     uvicorn.run(app, host="0.0.0.0", port=8000)
+# if __name__ == "__main__":
+#      import uvicorn
+#      uvicorn.run(app, host="0.0.0.0", port=8000)
 
