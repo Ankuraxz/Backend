@@ -9,8 +9,6 @@ app = FastAPI(title="Analyzer",
     description="Image Detection API",
     version="0.1.1",
     openapi_url="/api/v0.1.1/openapi.json",
-    docs_url="/api/v0.1.1/docs",
-    redoc_url="/api/v0.1.1/redoc"
 )
 
 app.add_middleware(
@@ -29,7 +27,6 @@ S3_BUCKET_UPLOAD = "aiathelp"
 Table = 'aiathelp'
 
 
-#Create Clients
 s3 = boto3.client('s3',
                   aws_access_key_id=AWS_ACCESS_KEY,
                   aws_secret_access_key=AWS_SECRET_KEY,
@@ -73,21 +70,19 @@ async def upload_file(image_file: Optional[UploadFile] = File(...),username: str
 
 
 
-
 @app.post("/user/")
 async def get_user_data(username: str = Form(...)):
 
     try:
         gettabledata = dynamodb.get_item(
             TableName=Table,
-            Key={str(username): {'S': username}} ## Needs changes respective to the table
+            Key={"Username": {'S': username}}
         )
         if 'Item' not in gettabledata:
             raise HTTPException(status_code=404, detail="User data not found")
 
         userdata = gettabledata['Item']
-        images = userdata['image']
-        return images
+        return userdata
     except Exception as e:
 
         raise HTTPException(status_code=500, detail=str(e)) from e
