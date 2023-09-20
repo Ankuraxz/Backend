@@ -75,7 +75,7 @@ async def upload_file(image_file: Optional[UploadFile] = File(...),username: str
 async def get_user_data(username: str = Form(...)):
     try:
         gettabledata = dynamodb.get_item(
-            TableName=table,
+            TableName=Table,
             Key={str(username): {'S': username}} ## Needs changes respective to the table
         )
         if 'Item' not in gettabledata:
