@@ -30,8 +30,7 @@ Table = 'aiathelp'
 
 s3 = boto3.client('s3',
                   aws_access_key_id=AWS_ACCESS_KEY,
-                  aws_secret_access_key=AWS_SECRET_KEY,
-                  endpoint_url=S3_ACCESS_POINT, region_name='us-east-1')
+                  aws_secret_access_key=AWS_SECRET_KEY, region_name='us-east-1')
 dynamodb = boto3.client('dynamodb', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY,
                         region_name='us-east-1')
 
@@ -51,7 +50,7 @@ async def read_root():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 @app.post("/upload/")
-async def upload_file(image_file: Optional[UploadFile] = File(...),username: str = Form(...)):
+async def upload_file(image_file: UploadFile = File(...),username: str = Form(...)):
     try:
         if not image_file or image_file.filename == "":
             raise HTTPException(status_code=400, detail="No image file provided")

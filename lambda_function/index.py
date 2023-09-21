@@ -23,6 +23,7 @@ def handler(event, context):
     image_key = event['Records'][0]['s3']['object']['key']
     username = extract_username_from_key(image_key)
     print(f'Username is {username}')
+    print(f'Key is {image_key}')
 
     image = s3.get_object(Bucket=bucket_name, Key=image_key)
     image_data = image['Body'].read()
