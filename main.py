@@ -90,7 +90,27 @@ async def get_user_data(username: str = Form(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-# if __name__ == "__main__":
-#      import uvicorn
-#      uvicorn.run(app, port=os.getenv('PORT', 8000), host=os.getenv('HOST', '0.0.0.0'))
+if __name__ == "__main__":
+     import uvicorn
+     uvicorn.run(app, port=os.getenv('PORT', 8000), host=os.getenv('HOST', '0.0.0.0'))
+
+
+#OPENAPI
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Analyzer",
+        version="0.1.1",
+        description="Image Detection API",
+        routes=app.routes,
+    )
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
+# This will generate the OpenAPI schema when you run the app using uvicorn.
 
