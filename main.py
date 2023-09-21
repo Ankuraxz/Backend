@@ -5,6 +5,8 @@ from fastapi import FastAPI, UploadFile, HTTPException, Form, File
 import boto3
 from botocore.exceptions import NoCredentialsError
 import json
+from PIL import Image
+import uuid
 
 app = FastAPI(title="Analyzer",
     description="Image Detection API",
@@ -34,6 +36,19 @@ s3 = boto3.client('s3',
 dynamodb = boto3.client('dynamodb', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY,
                         region_name='us-east-1')
 
+def resize_image(image_file):
+    image = Image.open(image_file.file)
+    image.thumbnail((512, 512))
+    image_file.file = image
+    return image_file
+
+def rename_image(image_file, username):
+    # Making image name as UUID.jpg or UUID.png based on the image type
+    image_name = str(username+"_"+uuid.uuid4())
+    image_type = image_file.filename.split(".")[-1]
+    image_file.filename = f"{image_name}.{image_type}"
+
+
 @app.get("/")
 def index():
     return {"message": "Hello User!"}
@@ -57,6 +72,11 @@ async def upload_file(image_file: UploadFile = File(...),username: str = Form(..
         # check if file is image
         if not image_file.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="File provided is not an image")
+
+        # Resize image
+        image_file = resize_image(image_file)
+        # Rename image
+        rename_image(image_file, username)
         s3_key = f"{username}/{image_file.filename}"
         print(image_file)
 
