@@ -44,7 +44,7 @@ def resize_image(image_file):
 
 def rename_image(image_file, username):
     # Making image name as UUID.jpg or UUID.png based on the image type
-    image_name = str(username+"_"+uuid.uuid4())
+    image_name = str(username+"_"+str(uuid.uuid4()))
     image_type = image_file.filename.split(".")[-1]
     image_file.filename = f"{image_name}.{image_type}"
 
