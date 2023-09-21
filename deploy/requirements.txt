@@ -3,4 +3,3 @@ boto3
 uvicorn
 wheel
 python-multipart
-
