@@ -1,3 +1,4 @@
+import io
 import os
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,7 +26,6 @@ app.add_middleware(
 
 AWS_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.getenv('AWS_SECRET_KEY')
-S3_ACCESS_POINT = os.getenv('S3_ACCESS_POINT')
 S3_BUCKET_UPLOAD = "aiathelp"
 Table = 'aiathelp'
 
@@ -64,24 +64,48 @@ async def read_root():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
+def resize_image(image_file, max_file_size_kb=100):
+    try:
+        with Image.open(io.BytesIO(image_file.file.read())) as img:
+            img.thumbnail((800, 800))
+
+            buffer = io.BytesIO()
+            img.save(buffer, format='JPEG')
+
+            file_size_kb = len(buffer.getvalue()) / 1024
+            if file_size_kb > max_file_size_kb:
+                raise HTTPException(status_code=400, detail="Resized image exceeds size limit")
+
+            buffer.seek(0)
+            return buffer
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error resizing image: {str(e)}")
+
+def rename_image(image_file, username):
+    image_name = str(username + "_" + str(uuid.uuid4()))
+    image_type = image_file.filename.split(".")[-1]
+    image_file.filename = f"{image_name}.{image_type}"
+
 @app.post("/upload/")
-async def upload_file(image_file: UploadFile = File(...),username: str = Form(...)):
+async def upload_file(image_file: UploadFile = File(...), username: str = Form(...)):
     try:
         if not image_file or image_file.filename == "":
             raise HTTPException(status_code=400, detail="No image file provided")
-        # check if file is image
+
+        # Check if the file is an image
         if not image_file.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="File provided is not an image")
 
-        # Resize image
-        image_file = resize_image(image_file)
-        # Rename image
-        rename_image(image_file, username)
-        s3_key = f"{username}/{image_file.filename}"
-        print(image_file)
+        # Resize the image
+        resized_image = resize_image(image_file)
 
+        # Rename the image (if needed)
+        rename_image(image_file, username)
+
+        s3_key = f"{username}/{image_file.filename}"
         s3.upload_fileobj(
-            Fileobj=image_file.file,
+            Fileobj=resized_image,
             Bucket=S3_BUCKET_UPLOAD,
             Key=s3_key,
         )
@@ -89,9 +113,10 @@ async def upload_file(image_file: UploadFile = File(...),username: str = Form(..
         return {"message": "File uploaded successfully"}
     except NoCredentialsError:
         raise HTTPException(status_code=500, detail="AWS credentials not found")
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 @app.post("/user/")
