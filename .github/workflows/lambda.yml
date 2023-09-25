@@ -20,6 +20,8 @@ jobs:
 
     - name: Install Lambda Layer Requirements
       run: |
+        cd 
+        ls -ltr
         cd lambda_function
         pip install -r requirements.txt -t .
         zip -r -9 index.zip .
