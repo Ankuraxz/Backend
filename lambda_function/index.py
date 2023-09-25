@@ -17,6 +17,7 @@ dynamodb = boto3.client('dynamodb', aws_access_key_id=aws_access_key_id, aws_sec
 
 
 def handler(event, context):
+    print(f'Starting Lambda')
     bucket_name = 'aiathelp'
     new_bucket_name = 'aiathelpfetch'
     print(event)
