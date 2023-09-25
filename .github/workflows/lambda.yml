@@ -16,12 +16,10 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.x
+        python-version: 3.8
 
     - name: Install Lambda Layer Requirements
       run: |
-        ls -ltr
-        cd lambda_function
         pip install -r requirements.txt -t .
         zip -r -9 index.zip .
       working-directory: lambda_function
