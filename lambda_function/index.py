@@ -26,7 +26,6 @@ recipient_email = 'ankurvermaaxz@gmail.com'
 
 
 def handler(event, context):
-    # Extract necessary information from the event
     bucket_name = 'aiathelp'
     new_bucket_name = 'aiathelpfetch'
     print(event)
