@@ -9,12 +9,15 @@ import json
 from PIL import Image
 import uuid
 
+
+# Create the FastAPI app
 app = FastAPI(title="Analyzer",
     description="Image Detection API",
     version="0.1.1",
     openapi_url="/api/v0.1.1/openapi.json",
 )
 
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,19 +27,28 @@ app.add_middleware(
 )
 
 
+# Load environment variables
 AWS_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.getenv('AWS_SECRET_KEY')
 S3_BUCKET_UPLOAD = "aiathelp"
 Table = 'aiathelp'
 
 
+# Create the S3 and DynamoDB clients
 s3 = boto3.client('s3',
                   aws_access_key_id=AWS_ACCESS_KEY,
                   aws_secret_access_key=AWS_SECRET_KEY, region_name='us-east-1')
+
 dynamodb = boto3.client('dynamodb', aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY,
                         region_name='us-east-1')
 
 def resize_image(image_file, max_file_size_kb=100):
+    """
+    Resize the image to a maximum file size (in KB)
+    :param image_file: The image file to resize
+    :param max_file_size_kb: The maximum file size (in KB) to resize to
+    :return: The resized image file
+    """
     try:
         with Image.open(io.BytesIO(image_file.file.read())) as img:
             img.thumbnail((800, 800))
@@ -55,6 +67,12 @@ def resize_image(image_file, max_file_size_kb=100):
         raise HTTPException(status_code=500, detail=f"Error resizing image: {str(e)}") from e
 
 def rename_image(image_file, username):
+    """
+    Rename the image file to a unique name in-place
+    :param image_file: The image file to rename
+    :param username: The username to use in the image name
+    :return: None
+    """
     image_name = str(username + "_" + str(uuid.uuid4()))
     image_type = image_file.filename.split(".")[-1]
     # if no type, default to jpg
@@ -68,6 +86,10 @@ def index():
 
 @app.get("/list/")
 async def read_root():
+    """
+    List all S3 buckets
+    :return: A list of all S3 buckets
+    """
     try:
         lists = s3.list_buckets()
         bucket_names = [x["Name"] for x in lists["Buckets"]]
@@ -82,6 +104,12 @@ async def read_root():
 
 @app.post("/upload/")
 async def upload_file(image_file: UploadFile = File(...), username: str = Form(...)):
+    """
+    Upload a file to S3
+    :param image_file: The image file to upload
+    :param username: The username to use in the image name
+    :return: A message indicating the file was uploaded successfully
+    """
     try:
         if not image_file or image_file.filename == "":
             raise HTTPException(status_code=400, detail="No image file provided")
@@ -114,7 +142,11 @@ async def upload_file(image_file: UploadFile = File(...), username: str = Form(.
 
 @app.post("/user/")
 async def get_user_data(username: str = Form(...)):
-
+    """
+    Get user data from DynamoDB
+    :param username: The username to find in DynamoDB
+    :return: User Data saved in DynamoDB whose username matches the provided username and confidence > 60
+    """
     try:
         gettabledata = dynamodb.get_item(TableName=Table, Key={'Username': {'S': username}})
         if 'Item' not in gettabledata:
@@ -147,6 +179,9 @@ if __name__ == "__main__":
 from fastapi.openapi.utils import get_openapi
 
 def custom_openapi():
+    """
+    Customized OpenAPI schema
+    """
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
