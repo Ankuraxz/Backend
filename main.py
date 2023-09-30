@@ -121,8 +121,18 @@ async def get_user_data(username: str = Form(...)):
             raise HTTPException(status_code=404, detail="User data not found")
 
         else:
+
             userdata = gettabledata['Item']
             userdata = json.loads(userdata.get('Data', {'S': '[]'})['S'])
+            for item in userdata:
+                newlist = []
+                x = item["Results"]["labels"]
+                for items in x:
+                    if items["Confidence"]>60:
+                        newlist.append({'LabelName': items['LabelName'], 'Confidence': items['Confidence']})
+                item["Results"]["labels"] = newlist
+
+            print(userdata)
             return {"message": "User data found", "data": userdata}
 
     except Exception as e:
