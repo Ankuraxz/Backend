@@ -84,7 +84,7 @@ def rename_image(image_file, username):
 def index():
     return {"message": "Hello User!"}
 
-@app.get("/list/")
+@app.get("/lists/")
 async def read_root():
     """
     List all S3 buckets
@@ -196,3 +196,4 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 # This will generate the OpenAPI schema when you run the app using uvicorn.
+#CI/CD
