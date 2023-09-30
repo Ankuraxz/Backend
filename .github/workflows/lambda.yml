@@ -1,0 +1,46 @@
+name: Update Lambda Code and Layers
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install Lambda Layer Requirements
+      run: |
+        pip install -r requirements.txt -t .
+        zip -r -9 index.zip .
+      working-directory: lambda_function
+
+    - name: Upload Lambda Function Code
+      run: |
+        aws lambda update-function-code \
+          --function-name analyzer \
+          --zip-file fileb://lambda_function/index.zip \
+          --region us-east-1 \
+
+      env:
+        AWS_DEFAULT_REGION: us-east-1
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+
+    - name: Clean up
+      run: |
+        rm index.zip
+      working-directory: lambda_function
+
+    - name: Deploy Complete
+      run: |
+        echo "Lambda function code and layers updated successfully!"
