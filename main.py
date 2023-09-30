@@ -196,4 +196,4 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 # This will generate the OpenAPI schema when you run the app using uvicorn.
-#CI/CD
+#CI/CD pipeline
