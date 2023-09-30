@@ -84,7 +84,7 @@ def rename_image(image_file, username):
 def index():
     return {"message": "Hello User!"}
 
-@app.get("/lists/")
+@app.get("/list/")
 async def read_root():
     """
     List all S3 buckets
