@@ -59,7 +59,7 @@ def handler(event, context):
     dynamo_data = {
         'UUID': str(uuid.uuid4()),
         'Username': username,
-        'Link': f's3://{new_bucket_name}/{new_image_key}',
+        'Link': f'https://{new_bucket_name}.s3.amazonaws.com/{new_image_key}',
         'Results': {
             'labels': labels_and_confidence
         },
