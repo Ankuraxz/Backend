@@ -165,7 +165,7 @@ async def get_user_data(username: str = Form(...)):
                 item["Results"]["labels"] = newlist
 
             print(userdata)
-            return {"message": "User data found", "data": userdata}
+            return {"message": "User data found", "data": userdata} #1
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
