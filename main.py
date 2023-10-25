@@ -121,7 +121,8 @@ async def upload_file(image_file: UploadFile = File(...), username: str = Form(.
         # Resize the image
         resized_image = resize_image(image_file)
 
-        # Rename the image (if needed)
+        # Rename the image
+        # Rename the image
         rename_image(image_file, username)
 
         s3_key = f"{username}/{image_file.filename}"
